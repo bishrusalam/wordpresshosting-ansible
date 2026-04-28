@@ -1,0 +1,28 @@
+---
+- name: Install free SSL certificate with Let's Encrypt
+  hosts: webservers
+  become: yes
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+
+    - name: Obtain and install SSL certificate
+      command: >
+        certbot --nginx
+        -d {{ domain }}
+        -d www.{{ domain }}
+        --non-interactive
+        --agree-tos
+        --email {{ wp_admin_email }}
+        --redirect
+      args:
+        creates: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+
+    - name: Install existing SSL certificate into Nginx
+      command: certbot install --cert-name {{ domain }}
+
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted

@@ -1,0 +1,87 @@
+---
+- name: Download and configure WordPress
+  hosts: webservers
+  become: yes
+  vars_files:
+    - ../vars/main.yml
+  tasks:
+
+    - name: Download latest WordPress
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
+        dest: /tmp/wordpress.tar.gz
+
+
+    - name: Extract WordPress
+      unarchive:
+        src: /tmp/wordpress.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+
+    - name: Copy WordPress to web root
+      copy:
+        src: /tmp/wordpress/
+        dest: "{{ web_root }}/"
+        owner: "{{ linux_user }}"
+        group: nginx
+        remote_src: yes
+
+
+    - name: Copy sample WordPress config
+      copy:
+        src: "{{ web_root }}/wp-config-sample.php"
+        dest: "{{ web_root }}/wp-config.php"
+        owner: "{{ linux_user }}"
+        group: nginx
+        mode: "0640"
+        remote_src: yes
+
+
+    - name: Set database name in wp-config
+      replace:
+        path: "{{ web_root }}/wp-config.php"
+        regexp: "database_name_here"
+        replace: "{{ db_name }}"
+
+    - name: Set database user in wp-config
+      replace:
+        path: "{{ web_root }}/wp-config.php"
+        regexp: "username_here"
+        replace: "{{ db_user }}"
+
+    - name: Set database password in wp-config
+      replace:
+        path: "{{ web_root }}/wp-config.php"
+        regexp: "password_here"
+        replace: "{{ db_password }}"
+
+
+    - name: Fetch WordPress secret keys from API
+      uri:
+        url: https://api.wordpress.org/secret-key/1.1/salt/
+        return_content: yes
+      register: wp_keys
+
+
+    - name: Replace placeholder keys in wp-config
+      replace:
+        path: "{{ web_root }}/wp-config.php"
+        regexp: "define\\( 'AUTH_KEY'.*?\\);"
+        replace: "{{ wp_keys.content }}"
+
+    - name: Set directory permissions (755)
+      shell: find {{ web_root }} -type d -exec chmod 755 {} \;
+      changed_when: false
+
+    - name: Set file permissions (644)
+      shell: find {{ web_root }} -type f -exec chmod 644 {} \;
+      changed_when: false
+
+    - name: Set write permissions for wp-content
+      file:
+        path: "{{ web_root }}/wp-content"
+        owner: "{{ linux_user }}"
+        group: nginx
+        mode: "0775"
+        recurse: yes

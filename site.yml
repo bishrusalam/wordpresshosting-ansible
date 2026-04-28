@@ -1,0 +1,8 @@
+---
+- import_playbook: playbooks/packages.yml
+- import_playbook: playbooks/user.yml
+- import_playbook: playbooks/mysql.yml
+- import_playbook: playbooks/wordpress.yml
+- import_playbook: playbooks/nginx.yml
+- import_playbook: playbooks/selinux.yml
+- import_playbook: playbooks/ssl.yml

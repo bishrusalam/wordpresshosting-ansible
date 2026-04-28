@@ -1,0 +1,20 @@
+server {
+    listen 80;
+    server_name {{ domain }} www.{{ domain }};
+
+    root {{ web_root }};
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        include fastcgi.conf;
+        fastcgi_pass unix:/run/php-fpm/www.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}

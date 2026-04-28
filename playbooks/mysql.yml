@@ -1,0 +1,71 @@
+---
+- name: Configure MySQL database and install phpMyAdmin
+  hosts: webservers
+  become: yes
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+ 
+    - name: Create MySQL root credentials file
+      copy:
+        dest: /root/.my.cnf
+        content: |
+          [client]
+          user=root
+          password={{ mysql_root_password }}
+          socket=/var/lib/mysql/mysql.sock
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Create WordPress database
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name: Create database user with full privileges
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL"
+        host: localhost
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name: Download phpMyAdmin
+      get_url:
+        url: https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+        dest: /tmp/phpmyadmin.tar.gz
+
+    - name: Extract phpMyAdmin
+      unarchive:
+        src: /tmp/phpmyadmin.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Move phpMyAdmin to website public directory
+      shell: >
+        mv /tmp/phpMyAdmin-*-all-languages {{ web_root }}/phpmyadmin
+      args:
+        creates: "{{ web_root }}/phpmyadmin"
+
+    - name: Set phpMyAdmin ownership
+      file:
+        path: "{{ web_root }}/phpmyadmin"
+        owner: "{{ linux_user }}"
+        group: nginx
+        mode: "0755"
+        recurse: yes
+
+  handlers:
+
+    - name: Reload Nginx
+      systemd:
+        name: nginx
+        state: reloaded

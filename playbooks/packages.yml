@@ -1,0 +1,83 @@
+---
+- name: Install Nginx, PHP 8, and MariaDB 10.6
+  hosts: webservers
+  become: yes
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+
+    - name: Install EPEL repository
+      dnf:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+        state: present
+        disable_gpg_check: yes
+
+    - name: Install Ansible MySQL collection dependency
+      dnf:
+        name:
+          - python3-PyMySQL
+        state: present
+
+    - name: Install Nginx web server
+      dnf:
+        name: nginx
+        state: present
+
+    - name: Install PHP and extensions
+      dnf:
+        name:
+          - php
+          - php-fpm
+          - php-mysqlnd
+          - php-cli
+          - php-curl
+          - php-gd
+          - php-mbstring
+          - php-xml
+          - php-zip
+          - php-intl
+          - php-bcmath
+        state: present
+
+    - name: Install MariaDB server
+      dnf:
+        name:
+          - mariadb-server
+          - mariadb
+          - python3-PyMySQL
+        state: present
+
+    - name: Install utility packages
+      dnf:
+        name:
+          - unzip
+          - curl
+          - wget
+          - tar
+        state: present
+
+    - name: Install Certbot
+      dnf:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+
+    - name: Enable and start Nginx
+      systemd:
+        name: nginx
+        enabled: yes
+        state: started
+
+    - name: Enable and start PHP-FPM
+      systemd:
+        name: php-fpm
+        enabled: yes
+        state: started
+
+    - name: Enable and start MariaDB
+      systemd:
+        name: mariadb
+        enabled: yes
+        state: started

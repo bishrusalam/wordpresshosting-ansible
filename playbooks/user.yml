@@ -1,0 +1,60 @@
+---
+- name: Create website user, home directory, and configure SFTP
+  hosts: webservers
+  become: yes
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+
+    - name: Create Linux user for the website
+      user:
+        name: "{{ linux_user }}"
+        password: "{{ linux_password | password_hash('sha512') }}"
+        shell: /bin/bash
+        home: "/home/{{ linux_user }}"
+        create_home: yes
+        state: present
+
+    - name: Create website public directory
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        owner: "{{ linux_user }}"
+        group: nginx
+        mode: "0755"
+
+    - name: Set root ownership on user home for SFTP chroot
+      file:
+        path: "/home/{{ linux_user }}"
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create writable uploads directory
+      file:
+        path: "{{ web_root }}/wp-content/uploads"
+        state: directory
+        owner: "{{ linux_user }}"
+        group: nginx
+        mode: "0775"
+
+    - name: Configure SFTP access in sshd_config
+      blockinfile:
+        path: /etc/ssh/sshd_config
+        marker: "# {mark} SFTP for {{ linux_user }}"
+        block: |
+          Match User {{ linux_user }}
+              ChrootDirectory /home/{{ linux_user }}
+              ForceCommand internal-sftp
+              AllowTcpForwarding no
+              X11Forwarding no
+              PasswordAuthentication yes
+      notify: Restart SSH
+
+  handlers:
+
+    - name: Restart SSH
+      systemd:
+        name: sshd
+        state: restarted
