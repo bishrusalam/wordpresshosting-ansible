@@ -28,19 +28,23 @@ Step 3 — Configure Credentials
 Step 4 — Run the automation script
 - Execute:
    - ./runthis.sh
+   - sudo ./runthis.sh
+
 - If permission error appears:
    - bash runthis.sh
 
 Step 5 — Access your website
 - Once the automation completes successfully, access the website using your configured DNS domain from any web browser:
   
-   - https://your-domain  :- WordPress
+   - https://your-domain  :- WordPress Blog page
+   - https://your-domain/wp-login.php  :- wordpress login page
    - https://your-domain/phpmyadmin   :- phpMyAdmin
 
 If the SSL certificate setup fails due to DNS propagation delay, wait a few minutes and retry:
 
 - Run the full deployment script:
    - ./runthis.sh
+   - sudo ./runthis.sh
 
 - Or execute only the SSL configuration playbook:
    - ansible-playbook -i inventory/hosts.ini playbooks/ssl.yml
