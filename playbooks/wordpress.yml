@@ -85,3 +85,21 @@
         group: nginx
         mode: "0775"
         recurse: yes
+
+    - name: Check if WordPress already installed
+      command: wp core is-installed --path="{{ web_root }}" --allow-root
+      register: wp_installed
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Install WordPress automatically
+      command: >
+        wp core install
+        --url="https://{{ domain }}"
+        --title="{{ site_name }}"
+        --admin_user="{{ wp_admin_user }}"
+        --admin_password="{{ wp_admin_password }}"
+        --admin_email="{{ wp_admin_email }}"
+        --path="{{ web_root }}"
+        --allow-root
+      when: wp_installed.rc != 0
