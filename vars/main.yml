@@ -1,20 +1,20 @@
-domain: "ansibleproject.duckdns.org"
-site_name: "myblog"
+domain: "your-domain"
+site_name: "site-name"
 
-
-linux_user: "bishru"
-linux_password: "1234"
+#linux-user-create
+linux_user: "username"
+linux_password: "password"
 web_root: "/home/{{ linux_user }}/{{ site_name }}/public"
 
+#database
+db_name: "database-name"
+db_user: "database-user"
+db_password: "database-password"
+mysql_root_password: "database-root-password"
 
-db_name: "wordpressdb"
-db_user: "salam"
-db_password: "1234"
-mysql_root_password: "1234"
-
-
-wp_admin_user: "wpadmin"
-wp_admin_password: "Wpadmin1234"
-wp_admin_email: "hheeiii0033@gmail.com"
+#wordpress-login
+wp_admin_user: "username"
+wp_admin_password: "password"
+wp_admin_email: "email"
 
 php_version: "8.2"
